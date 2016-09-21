@@ -12,16 +12,29 @@ float CONFIG_precise_ratio = 4;
 float CONFIG_slow_rate = 0.01;
 float CONFIG_slow_tick = 30;
 float CONFIG_drive_mode = 1;
-int CONFIG_calib = 0;
+float CONFIG_stopper_tick = 20;
+float CONFIG_stop_thresh = 90;
 int LCD_left_button = 1;
 int LCD_center_button = 2;
 int LCD_right_button = 4;
 int LCD_refresh_rate = 30;
 float CONTROL_sensitivity = 1.2;
-float CONTROL_threshold = 5;
+float CONTROL_threshold = 2;
+float CONTROL_min_speed = 5;
 float CONTROL_precise = CONTROL_sensitivity / CONFIG_precise_ratio;
-float CONTROL_left_calib = 0;
-float CONTROL_right_calib = 0;
+
+float left = 0;
+float right = 0;
+
+float prev_left = 0;
+float prev_right = 0;
+
+/////////////////////////////// MISC ////////////////////////////////////
+int onezeroneg(float val) {
+	if (val < 0) {return -1;}
+	else if (val > 0) {return 1;}
+	else {return 0;}
+}
 
 /////////////////////////////// MOVEMENT ////////////////////////////////
 void MOVEMENT_left_drive(float power) {
@@ -72,8 +85,8 @@ bool STATE_precise_control() {
 bool STATE_toggle_drive_mode() {
 	return (vexRT[Btn6D] == 1);
 }
-bool STATE_calib() {
-	return (vexRT[Btn5U] && vexRT[Btn5D] && vexRT[Btn6D] && vexRT[Btn6U] && CONFIG_calib != 1);
+bool STATE_view_speed() {
+	return (onezeroneg(left) || onezeroneg(right));
 }
 
 /////////////////////////////// LCD VIEWS ///////////////////////////////
@@ -104,9 +117,9 @@ void VIEW_info() {
 		displayLCDString(0, 15, "L");
 	}
 }
-void VIEW_calibrate() {
-	displayLCDString(0, 0, "################");
-	displayLCDString(1, 0, "################");
+void VIEW_leftright() {
+	displayLCDFloat(0, 0, left);
+	displayLCDFloat(1, 0, right);
 }
 
 /////////////////////////////// DO TASKS ////////////////////////////////
@@ -116,21 +129,19 @@ void DO_lcd() {
 			VIEW_voltage();
 		} else if (STATE_LCD_sensitivity()) {
 			VIEW_sensitivity();
-		} else if (CONFIG_calib) {
-			VIEW_calibrate();
+		} else if (STATE_view_speed()) {
+			VIEW_leftright();
 		} else {
 			VIEW_info();
 		}
 	}
 }
 void DO_usercontrol() {
-	float left = vexRT[Ch3];
-	float right = vexRT[Ch2];
-	int leftmult = 1;
-	int rightmult = 1;
+	left = vexRT[Ch3];
+	right = vexRT[Ch2];
 	if (CONFIG_drive_mode == 1) {
-		left = ((left*left*left)/20000)+5;
-		right = ((right*right*right)/20000)+5;
+		left = ((left*left*left)/20000);
+		right = ((right*right*right)/20000);
 	}
 	left = left * CONTROL_sensitivity;
 	right = right * CONTROL_sensitivity;
@@ -140,12 +151,8 @@ void DO_usercontrol() {
 	if (right > -CONTROL_threshold && right < CONTROL_threshold) {
 		right = 0;
 	}
-	if (CONFIG_calib) {
-		CONTROL_left_calib = CONTROL_left_calib + left;
-		CONTROL_right_calib = CONTROL_right_calib + right;
-	}
-	MOVEMENT_left_drive(left);
-	MOVEMENT_right_drive(right);
+	left = left + (onezeroneg(left) * CONTROL_min_speed);
+	right = right + (onezeroneg(right) * CONTROL_min_speed);
 }
 void DO_senscontrol() {
 	if (STATE_ontick(50)) {
@@ -181,13 +188,28 @@ void DO_precisecontrol() {
 		} else {
 			CONFIG_drive_mode = 1;
 		}
-		wait1Msec(100);
+		wait1Msec(10);
 	}
 }
-void DO_calibrate() {
-	if (STATE_calib()) {
-		CONFIG_calib = 1;
+void DO_stopper() {
+	if (left == 0 && right == 0 && STATE_ontick(CONFIG_stopper_tick)) {
+		float STOP_AMOUNT = 100;
+		if (prev_left > CONFIG_stop_thresh && prev_right > CONFIG_stop_thresh) {
+			left = -STOP_AMOUNT;
+			right = -STOP_AMOUNT;
+		}
+		if (prev_left < -CONFIG_stop_thresh && prev_right < -CONFIG_stop_thresh) {
+			left = STOP_AMOUNT;
+			right = STOP_AMOUNT;
+		}
+
+		prev_left = left;
+		prev_right = right;
 	}
+}
+void DO_movement() {
+	MOVEMENT_left_drive(left);
+	MOVEMENT_right_drive(right);
 }
 
 /////////////////////////////// MAIN LOOP ///////////////////////////////
@@ -197,9 +219,10 @@ task main()
 	while (true) {
 		DO_lcd();
 		DO_usercontrol();
-		DO_senscontrol();
 		DO_precisecontrol();
-		DO_calibrate();
+		DO_stopper();
+		DO_movement();
+		DO_senscontrol();
 
 		frame++;
 	}
