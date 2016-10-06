@@ -20,6 +20,7 @@ float CONFIG_drive_mode = 1;
 float CONFIG_accel_tick = 200;
 float ARM_up_speed = 60;
 float ARM_down_speed = 40;
+float ARM_hover_speed = 100;
 int LCD_left_button = 1;
 int LCD_center_button = 2;
 int LCD_right_button = 4;
@@ -61,89 +62,27 @@ void MOVEMENT_right_drive(float power) {
 }
 
 /////////////////////////////// ARM CODE ////////////////////////////////
-void armUpLoop()
-{
-	//clear encoders
-	resetMotorEncoder(left_arm);
-  resetMotorEncoder(right_arm);
-
-  int error;
-	int errThresh = 1; //value that is close enough to motor value
-	int defaultMtrPower = ARM_up_speed; //default power level
-	int deltaMtrPower = 10; // change in motor speed to match slave to master
-
-	while(vexRT[Btn6U] == 1)
-	{
-		motor[left_arm] = defaultMtrPower; //set motors at default power
-		motor[right_arm] = defaultMtrPower;
-
-
-		wait1Msec(100); //allow time for error to occur
-
-   	error = getMotorEncoder(right_arm) - getMotorEncoder(left_arm); //right encoder is master, left is slave
-
-		if(error > errThresh)
-		{
-			motor[left_arm] = (defaultMtrPower + deltaMtrPower);
-
-		}
-		else if(error < errThresh *-1)
-		{
-			motor[left_arm] = (defaultMtrPower - deltaMtrPower);
-
-		}
-		else
-		{
-			motor[left_arm] = defaultMtrPower;
-
-		}
-
-	}
-	motor[left_arm] = defaultMtrPower;
-	motor[right_arm] = defaultMtrPower;
+void ARM_up() {
+	motor[left_arm] = ARM_up_speed;
+	motor[right_arm] = ARM_up_speed;
 }
-
-void armStop()
-{
+void ARM_stop() {
 	motor[left_arm] = 0;
 	motor[right_arm] = 0;
 }
-
-void armDownLoop()
-{
-	resetMotorEncoder(left_arm);  //clears encoders
-  resetMotorEncoder(right_arm);
-	int error;
-	int errThresh = 1; //value that is close enough to motor value
-	int defaultMtrPower = -ARM_down_speed; //default power level
-	int deltaMtrPower = 5; // change in motor speed to match slave to master
-
-	while(vexRT[Btn8D] == 1)
-	{
-		motor[left_arm] = defaultMtrPower; //set motors at default power
-		motor[right_arm] = defaultMtrPower;
-
-		wait1Msec(100); //allow time for error to occur
-
-		error = getMotorEncoder(right_arm) - getMotorEncoder(left_arm); //right encoder is master, left is slave
-
-		if(error > errThresh)
-		{
-			motor[left_arm] = (defaultMtrPower + deltaMtrPower); //to speed up slaves
-		}
-		else if(error < errThresh *-1)
-		{
-			motor[left_arm] = (defaultMtrPower - deltaMtrPower); //to slow down slaves
-		}
-		else
-		{
-			motor[left_arm] = defaultMtrPower;
-		}
-
-	}
-	motor[left_arm] = defaultMtrPower;
-	motor[right_arm] = defaultMtrPower;
-
+void ARM_down() {
+	motor[left_arm] = -ARM_down_speed;
+	motor[right_arm] = -ARM_down_speed;
+}
+void ARM_hover() {
+	motor[left_arm] = ARM_hover_speed;
+	motor[right_arm] = ARM_hover_speed;
+	wait1Msec(10);
+	motor[left_arm] = -ARM_hover_speed;
+	motor[right_arm] = -ARM_hover_speed;
+	wait1Msec(10);
+	motor[left_arm] = 0;
+	motor[right_arm] = 0;
 }
 
 /////////////////////////////// LCD SETUP ///////////////////////////////
@@ -193,6 +132,9 @@ bool STATE_ARM_down() {
 }
 bool STATE_debug_view() {
 	return ((bool)vexRT[Btn8D]);
+}
+bool STATE_ARM_hover() {
+	return ((bool)vexRT[Btn7D] && ! STATE_LCD_sensitivity());
 }
 
 /////////////////////////////// LCD VIEWS ///////////////////////////////
@@ -319,13 +261,15 @@ void DO_movement() {
 }
 
 void DO_arm() {
-	if(STATE_ARM_up()) {
-		armUpLoop();
+	if (STATE_ARM_up()) {
+		ARM_up();
 	}
-	else if(STATE_ARM_down()) {
-		armDownLoop();
+	else if (STATE_ARM_down()) {
+		ARM_down();
+	} else if (STATE_ARM_hover()) {
+		ARM_hover();
 	} else {
-		armStop();
+		ARM_stop();
 	}
 }
 
@@ -342,8 +286,8 @@ task main()
 		DO_arm();
 		DO_senscontrol();
 
-		debug_one = getMotorEncoder(left_arm);
 
 		frame++;
 	}
+
 }
