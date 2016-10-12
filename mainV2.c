@@ -74,16 +74,6 @@ void ARM_down() {
 	motor[left_arm] = -ARM_down_speed;
 	motor[right_arm] = -ARM_down_speed;
 }
-void ARM_hover() {
-	motor[left_arm] = ARM_hover_speed;
-	motor[right_arm] = ARM_hover_speed;
-	wait1Msec(10);
-	motor[left_arm] = -ARM_hover_speed;
-	motor[right_arm] = -ARM_hover_speed;
-	wait1Msec(10);
-	motor[left_arm] = 0;
-	motor[right_arm] = 0;
-}
 
 /////////////////////////////// LCD SETUP ///////////////////////////////
 void displayLCDFloat(int line, int pos, float val) {
@@ -132,9 +122,6 @@ bool STATE_ARM_down() {
 }
 bool STATE_debug_view() {
 	return ((bool)vexRT[Btn8D]);
-}
-bool STATE_ARM_hover() {
-	return ((bool)vexRT[Btn7D] && ! STATE_LCD_sensitivity());
 }
 
 /////////////////////////////// LCD VIEWS ///////////////////////////////
@@ -266,8 +253,6 @@ void DO_arm() {
 	}
 	else if (STATE_ARM_down()) {
 		ARM_down();
-	} else if (STATE_ARM_hover()) {
-		ARM_hover();
 	} else {
 		ARM_stop();
 	}
