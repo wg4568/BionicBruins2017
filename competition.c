@@ -104,6 +104,23 @@ void ARM_down() {
 	motor[left_arm_b] = -ARM_down_speed;
 	motor[right_arm_b] = -ARM_down_speed;
 }
+void ARM_coast() {
+	motor[left_arm_a] = 0;
+	motor[right_arm_a] = 0;
+	motor[left_arm_b] = 0;
+	motor[right_arm_b] = 0;
+}
+void ARM_move(float direction, float time) {
+	if (direction < 0) {
+		ARM_down();
+	} else if (direction > 0) {
+		ARM_up();
+	} else {
+		ARM_coast();
+	}
+	wait1Msec(time);
+	ARM_stop();
+}
 
 /////////////////////////////// LCD SETUP ///////////////////////////////
 void displayLCDFloat(int line, int pos, float val) {
@@ -306,6 +323,27 @@ void DO_arm() {
 	}
 }
 
+void DO_auton() {
+	MOVEMENT_drive(-70, -70, 800);			//Back
+	MOVEMENT_drive(60, 60, 1100);				//Forwards
+	ARM_move(1, 1500);									//Raise stars
+	MOVEMENT_drive(0, -70, 1150);				//Turn
+	MOVEMENT_drive(50, 50, 50);					//Halt
+	MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
+	ARM_move(1, 1650);									//Flip over fence
+	ARM_move(-1, 2500);									//Lower arm
+	ARM_move(0, 700);										//Coast arm
+	MOVEMENT_drive(50, 50, 1000);				//Drive forwards
+	MOVEMENT_drive(50, -50, 500);				//Turn to middle
+	MOVEMENT_drive(40, 40, 1400);				//Drive to stars
+	ARM_move(1, 1200);
+	MOVEMENT_drive(-40, -40, 1400);
+	MOVEMENT_drive(-50, 50, 400);
+	MOVEMENT_drive(-50, -50, 1000);
+	ARM_move(1, 1200);
+	ARM_move(-1, 2000);
+}
+
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
 /*                                                                           */
@@ -337,10 +375,17 @@ void pre_auton()
 /*---------------------------------------------------------------------------*/
 
 task autonomous() {
-	displayLCDString(0, 0, "AUTONOMOUS MODE")
-	MOVEMENT_drive(-100, -100);
-	wait1Msec(0.5);
-	MOVEMENT_drive(0, 0);
+	//Drive back
+	//Arm down
+	//Drive forward
+	//Arm up half way
+	//Drive to fence
+	//Arm up and over fence
+	//Arm down
+	//Forwards
+	displayLCDString(0, 0, "AUTONOMOUS MODE");
+	DO_auton();
+	LCD_init();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -354,6 +399,7 @@ task autonomous() {
 /*---------------------------------------------------------------------------*/
 
 task usercontrol() {
+	DO_auton();
 	while (true) {
 		DO_lcd();
 		DO_usercontrol();
@@ -362,7 +408,6 @@ task usercontrol() {
 		DO_movement();
 		DO_arm();
 		DO_senscontrol();
-
 
 		frame++;
 	}
