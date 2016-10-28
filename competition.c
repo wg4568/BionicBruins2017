@@ -46,6 +46,7 @@ float CONTROL_min_speed = 5;
 float CONTROL_precise = CONTROL_sensitivity / CONFIG_precise_ratio;
 int CONTROL_direction = 1;
 int CONTROL_precise_toggle = 0;
+string AUTON_MODE = "RIGHT";
 
 float left = 0;
 float right = 0;
@@ -128,17 +129,20 @@ void displayLCDFloat(int line, int pos, float val) {
 	string valstr = val;
 	displayLCDString(line, pos, valstr);
 }
-void LCD_init() {
+void LCD_reset() {
 	bLCDBacklight = true;
 	clearLCDLine(0);
 	clearLCDLine(1);
 }
 /////////////////////////////// STATES //////////////////////////////////
 bool STATE_LCD_voltage() {
-	return (nLCDButtons == LCD_left_button || SensorValue[debug_button] || vexRT[Btn5D]);
+	return (SensorValue[debug_button] || vexRT[Btn5D]);
 }
 bool STATE_LCD_sensitivity() {
-	return (nLCDButtons == LCD_right_button || vexRT[Btn8R]);
+	return ((bool)vexRT[Btn8R]);
+}
+bool STATE_auton_toggle() {
+	return (nLCDButtons == LCD_center_button);
 }
 bool STATE_adjust_sensdown() {
 	return (STATE_LCD_sensitivity() && vexRT[Btn7D]);
@@ -152,6 +156,7 @@ bool STATE_adjust_threshdown() {
 bool STATE_adjust_threshup() {
 	return (STATE_LCD_sensitivity() && vexRT[Btn7U]);
 }
+
 bool STATE_precise_control() {
 	if (vexRT[Btn8D]) {
 		if (CONTROL_precise_toggle == 1) {
@@ -197,10 +202,12 @@ void VIEW_sensitivity() {
 void VIEW_info() {
 	VIEW_blank();
 	displayLCDString(0, 0, "Driver mode");
+	displayLCDString(1, 0, AUTON_MODE);
 	if (STATE_precise_control()) {
 		displayLCDString(1, 0, "PRECISE");
 	} else {
 		clearLCDLine(1);
+		displayLCDString(1, 0, AUTON_MODE);
 	}
 	if (CONFIG_drive_mode) {
 		displayLCDString(0, 15, "E");
@@ -234,6 +241,15 @@ void DO_lcd() {
 	}
 }
 void DO_usercontrol() {
+	if (STATE_auton_toggle()) {
+		if (AUTON_MODE == "LEFT") {
+			AUTON_MODE = "RIGHT";
+		} else {
+			AUTON_MODE = "LEFT";
+		}
+		wait1Msec(200);
+	}
+
 	left = vexRT[Ch3];
 	right = vexRT[Ch2];
 	if (CONFIG_drive_mode == 1) {
@@ -324,24 +340,45 @@ void DO_arm() {
 }
 
 void DO_auton() {
-	MOVEMENT_drive(-70, -70, 800);			//Back
-	MOVEMENT_drive(60, 60, 1100);				//Forwards
-	ARM_move(1, 1500);									//Raise stars
-	MOVEMENT_drive(0, -70, 1150);				//Turn
-	MOVEMENT_drive(50, 50, 50);					//Halt
-	MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
-	ARM_move(1, 1650);									//Flip over fence
-	ARM_move(-1, 2500);									//Lower arm
-	ARM_move(0, 700);										//Coast arm
-	MOVEMENT_drive(50, 50, 1000);				//Drive forwards
-	MOVEMENT_drive(50, -50, 500);				//Turn to middle
-	MOVEMENT_drive(40, 40, 1400);				//Drive to stars
-	ARM_move(1, 1200);
-	MOVEMENT_drive(-40, -40, 1400);
-	MOVEMENT_drive(-50, 50, 400);
-	MOVEMENT_drive(-50, -50, 1000);
-	ARM_move(1, 1200);
-	ARM_move(-1, 2000);
+	if (AUTON_MODE == "RIGHT") {
+		MOVEMENT_drive(-70, -70, 800);			//Back
+		MOVEMENT_drive(60, 60, 1100);				//Forwards
+		ARM_move(1, 1500);									//Raise stars
+		MOVEMENT_drive(0, -70, 1150);				//Turn
+		MOVEMENT_drive(50, 50, 50);					//Halt
+		MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
+		ARM_move(1, 1650);									//Flip over fence
+		ARM_move(-1, 2500);									//Lower arm
+		ARM_move(0, 700);										//Coast arm
+		MOVEMENT_drive(50, 50, 1000);				//Drive forwards
+		MOVEMENT_drive(50, -50, 500);				//Turn to middle
+		MOVEMENT_drive(40, 40, 1400);				//Drive to stars
+		ARM_move(1, 1200);
+		MOVEMENT_drive(-40, -40, 1400);
+		MOVEMENT_drive(-50, 50, 400);
+		MOVEMENT_drive(-50, -50, 1000);
+		ARM_move(1, 1200);
+		ARM_move(-1, 2000);
+	} else {
+		MOVEMENT_drive(-70, -70, 800);			//Back
+		MOVEMENT_drive(60, 60, 1100);				//Forwards
+		ARM_move(1, 1500);									//Raise stars
+		MOVEMENT_drive(-70, 0, 1150);				//Turn
+		MOVEMENT_drive(50, 50, 50);					//Halt
+		MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
+		ARM_move(1, 1650);									//Flip over fence
+		ARM_move(-1, 2500);									//Lower arm
+		ARM_move(0, 700);										//Coast arm
+		MOVEMENT_drive(50, 50, 1000);				//Drive forwards
+		MOVEMENT_drive(-50, 50, 500);				//Turn to middle
+		MOVEMENT_drive(40, 40, 1400);				//Drive to stars
+		ARM_move(1, 1200);
+		MOVEMENT_drive(-40, -40, 1400);
+		MOVEMENT_drive(50, -50, 400);
+		MOVEMENT_drive(-50, -50, 1000);
+		ARM_move(1, 1200);
+		ARM_move(-1, 2000);
+	}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -361,7 +398,7 @@ void pre_auton()
   // manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
   bDisplayCompetitionStatusOnLcd = false;
-  LCD_init();
+  LCD_reset();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -375,17 +412,9 @@ void pre_auton()
 /*---------------------------------------------------------------------------*/
 
 task autonomous() {
-	//Drive back
-	//Arm down
-	//Drive forward
-	//Arm up half way
-	//Drive to fence
-	//Arm up and over fence
-	//Arm down
-	//Forwards
 	displayLCDString(0, 0, "AUTONOMOUS MODE");
 	DO_auton();
-	LCD_init();
+	LCD_reset();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -399,7 +428,6 @@ task autonomous() {
 /*---------------------------------------------------------------------------*/
 
 task usercontrol() {
-	DO_auton();
 	while (true) {
 		DO_lcd();
 		DO_usercontrol();
