@@ -11,7 +11,8 @@
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
-/*        Description: Competition template for VEX EDR                      */
+/*										Bionic Bruins B Team (6374B) Code											 */
+/*										 	by William Gardner, 2016														 */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
@@ -33,9 +34,8 @@ float CONFIG_slow_tick = 30;
 float CONFIG_drive_mode = 1;
 float CONFIG_accel_tick = 200;
 float CONFIG_turn_ratio = 0.75;
-float ARM_up_speed = 60;
-float ARM_down_speed = 40;
-float ARM_hover_speed = 100;
+float ARM_up_speed = 100;
+float ARM_down_speed = 60;
 int LCD_left_button = 1;
 int LCD_center_button = 2;
 int LCD_right_button = 4;
@@ -112,6 +112,10 @@ void ARM_coast() {
 	motor[right_arm_b] = 0;
 }
 void ARM_move(float direction, float time) {
+	float upold = ARM_up_speed;
+	float doold = ARM_down_speed;
+	ARM_up_speed = 60;
+	ARM_down_speed = 40;
 	if (direction < 0) {
 		ARM_down();
 	} else if (direction > 0) {
@@ -121,6 +125,8 @@ void ARM_move(float direction, float time) {
 	}
 	wait1Msec(time);
 	ARM_stop();
+	ARM_up_speed = upold;
+	ARM_down_speed = doold;
 }
 
 /////////////////////////////// LCD SETUP ///////////////////////////////
@@ -342,8 +348,8 @@ void DO_arm() {
 void DO_auton() {
 	if (AUTON_MODE == "RIGHT") {
 		MOVEMENT_drive(-70, -70, 800);			//Back
-		MOVEMENT_drive(60, 60, 1100);				//Forwards
-		ARM_move(1, 1500);									//Raise stars
+		MOVEMENT_drive(60, 60, 1150);				//Forwards
+		ARM_move(1, 1400);									//Raise stars
 		MOVEMENT_drive(0, -70, 1150);				//Turn
 		MOVEMENT_drive(50, 50, 50);					//Halt
 		MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
@@ -351,18 +357,10 @@ void DO_auton() {
 		ARM_move(-1, 2500);									//Lower arm
 		ARM_move(0, 700);										//Coast arm
 		MOVEMENT_drive(50, 50, 1000);				//Drive forwards
-		MOVEMENT_drive(50, -50, 500);				//Turn to middle
-		MOVEMENT_drive(40, 40, 1400);				//Drive to stars
-		ARM_move(1, 1200);
-		MOVEMENT_drive(-40, -40, 1400);
-		MOVEMENT_drive(-50, 50, 400);
-		MOVEMENT_drive(-50, -50, 1000);
-		ARM_move(1, 1200);
-		ARM_move(-1, 2000);
 	} else {
 		MOVEMENT_drive(-70, -70, 800);			//Back
-		MOVEMENT_drive(60, 60, 1100);				//Forwards
-		ARM_move(1, 1500);									//Raise stars
+		MOVEMENT_drive(60, 60, 1150);				//Forwards
+		ARM_move(1, 1400);									//Raise stars
 		MOVEMENT_drive(-70, 0, 1150);				//Turn
 		MOVEMENT_drive(50, 50, 50);					//Halt
 		MOVEMENT_drive(-50, -50, 1650);			//Drive to fence
@@ -370,26 +368,8 @@ void DO_auton() {
 		ARM_move(-1, 2500);									//Lower arm
 		ARM_move(0, 700);										//Coast arm
 		MOVEMENT_drive(50, 50, 1000);				//Drive forwards
-		MOVEMENT_drive(-50, 50, 500);				//Turn to middle
-		MOVEMENT_drive(40, 40, 1400);				//Drive to stars
-		ARM_move(1, 1200);
-		MOVEMENT_drive(-40, -40, 1400);
-		MOVEMENT_drive(50, -50, 400);
-		MOVEMENT_drive(-50, -50, 1000);
-		ARM_move(1, 1200);
-		ARM_move(-1, 2000);
 	}
 }
-
-/*---------------------------------------------------------------------------*/
-/*                          Pre-Autonomous Functions                         */
-/*                                                                           */
-/*  You may want to perform some actions before the competition starts.      */
-/*  Do them in the following function.  You must return from this function   */
-/*  or the autonomous and usercontrol tasks will not be started.  This       */
-/*  function is only called once after the cortex has been powered on and    */
-/*  not every time that the robot is disabled.                               */
-/*---------------------------------------------------------------------------*/
 
 void pre_auton()
 {
@@ -401,31 +381,11 @@ void pre_auton()
   LCD_reset();
 }
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
-
 task autonomous() {
 	displayLCDString(0, 0, "AUTONOMOUS MODE");
 	DO_auton();
 	LCD_reset();
 }
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              User Control Task                            */
-/*                                                                           */
-/*  This task is used to control your robot during the user control phase of */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
 
 task usercontrol() {
 	while (true) {
