@@ -22,6 +22,8 @@ void LCD_init() {
 	bLCDBacklight = true;
 	clearLCDLine(0);
 	clearLCDLine(1);
+
+	//hi
 }
 
 /////////////////////////////// LCD VIEWS ///////////////////////////////
