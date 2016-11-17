@@ -1,3 +1,4 @@
+#pragma config(Sensor, in3,    ARM_pot,        sensorPotentiometer)
 #pragma config(Sensor, dgtl11, debug_button,   sensorTouch)
 #pragma config(Motor,  port2,           front_left,    tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port3,           front_right,   tmotorVex393_MC29, openLoop, reversed)
@@ -69,80 +70,15 @@ bool ontick(int tick) {
 	return (frame%tick == 0);
 }
 
-/////////////////////////////// MOVEMENT ////////////////////////////////
-void MOVEMENT_left_drive(float power) {
-	motor(front_left) = power;
-	motor(back_left) = power;
-}
-void MOVEMENT_right_drive(float power) {
-	motor(front_right) = power;
-	motor(back_right) = power;
-}
-void MOVEMENT_drive(float pl, float pr, float time) {
-	MOVEMENT_left_drive(pl);
-	MOVEMENT_right_drive(pr);
-	wait1Msec(time);
-	MOVEMENT_left_drive(0);
-	MOVEMENT_right_drive(0);
-}
-
-/////////////////////////////// ARM CODE ////////////////////////////////
-void ARM_up() {
-	motor[left_arm_a] = ARM_up_speed;
-	motor[right_arm_a] = ARM_up_speed;
-	motor[left_arm_b] = ARM_up_speed;
-	motor[right_arm_b] = ARM_up_speed;
-}
-void ARM_stop() {
-	motor[left_arm_a] = 20;
-	motor[right_arm_a] = 20;
-	motor[left_arm_b] = 20;
-	motor[right_arm_b] = 20;
-}
-void ARM_down() {
-	motor[left_arm_a] = -ARM_down_speed;
-	motor[right_arm_a] = -ARM_down_speed;
-	motor[left_arm_b] = -ARM_down_speed;
-	motor[right_arm_b] = -ARM_down_speed;
-}
-void ARM_coast() {
-	motor[left_arm_a] = 0;
-	motor[right_arm_a] = 0;
-	motor[left_arm_b] = 0;
-	motor[right_arm_b] = 0;
-}
-void ARM_move(float direction, float time) {
-	float upold = ARM_up_speed;
-	float doold = ARM_down_speed;
-	ARM_up_speed = 60;
-	ARM_down_speed = 40;
-	if (direction < 0) {
-		ARM_down();
-	} else if (direction > 0) {
-		ARM_up();
-	} else {
-		ARM_coast();
-	}
-	wait1Msec(time);
-	ARM_stop();
-	ARM_up_speed = upold;
-	ARM_down_speed = doold;
-}
-
-/////////////////////////////// LCD SETUP ///////////////////////////////
-void displayLCDFloat(int line, int pos, float val) {
-	clearLCDLine(line);
-	string valstr = val;
-	displayLCDString(line, pos, valstr);
-}
-void LCD_reset() {
-	bLCDBacklight = true;
-	clearLCDLine(0);
-	clearLCDLine(1);
-}
 /////////////////////////////// STATES //////////////////////////////////
 bool STATE_LCD_voltage() {
 	return (SensorValue[debug_button] || vexRT[Btn5D]);
+}
+bool STATE_ARM_allow_up() {
+	return (SensorValue[ARM_pot] < 4095);
+}
+bool STATE_ARM_allow_down() {
+	return (SensorValue[ARM_pot] > 0);
 }
 bool STATE_LCD_sensitivity() {
 	return ((bool)vexRT[Btn8R]);
@@ -174,7 +110,6 @@ bool STATE_precise_control() {
 	}
 	return ((bool)CONTROL_precise_toggle);
 }
-
 bool STATE_toggle_drive_mode() {
 	return (vexRT[Btn7U] == 1);
 }
@@ -189,6 +124,95 @@ bool STATE_ARM_down() {
 }
 bool STATE_debug_view() {
 	return ((bool)vexRT[Btn7D]);
+}
+
+/////////////////////////////// MOVEMENT ////////////////////////////////
+void MOVEMENT_left_drive(float power) {
+	motor(front_left) = power;
+	motor(back_left) = power;
+}
+void MOVEMENT_right_drive(float power) {
+	motor(front_right) = power;
+	motor(back_right) = power;
+}
+void MOVEMENT_drive(float pl, float pr, float time) {
+	MOVEMENT_left_drive(pl);
+	MOVEMENT_right_drive(pr);
+	wait1Msec(time);
+	MOVEMENT_left_drive(0);
+	MOVEMENT_right_drive(0);
+}
+
+/////////////////////////////// ARM CODE ////////////////////////////////
+void ARM_up() {
+	if (STATE_ARM_allow_up()) {
+		motor[left_arm_a] = ARM_up_speed;
+		motor[right_arm_a] = ARM_up_speed;
+		motor[left_arm_b] = ARM_up_speed;
+		motor[right_arm_b] = ARM_up_speed;
+	}
+}
+void ARM_stop() {
+	motor[left_arm_a] = 0;
+	motor[right_arm_a] = 0;
+	motor[left_arm_b] = 0;
+	motor[right_arm_b] = 0;
+}
+void ARM_down() {
+	if (STATE_ARM_allow_down()) {
+		motor[left_arm_a] = -ARM_down_speed;
+		motor[right_arm_a] = -ARM_down_speed;
+		motor[left_arm_b] = -ARM_down_speed;
+		motor[right_arm_b] = -ARM_down_speed;
+	}
+}
+void ARM_coast() {
+	motor[left_arm_a] = 0;
+	motor[right_arm_a] = 0;
+	motor[left_arm_b] = 0;
+	motor[right_arm_b] = 0;
+}
+void ARM_move(float direction, float time) {
+	float upold = ARM_up_speed;
+	float doold = ARM_down_speed;
+	ARM_up_speed = 60;
+	ARM_down_speed = 40;
+	if (direction < 0) {
+		ARM_down();
+	} else if (direction > 0) {
+		ARM_up();
+	} else {
+		ARM_coast();
+	}
+	wait1Msec(time);
+	ARM_stop();
+	ARM_up_speed = upold;
+	ARM_down_speed = doold;
+}
+
+void ARM_to(float pos) {
+	if (pos < 0) {pos = 0;}
+	if (pos > 4095) {pos = 4095;}
+	int curr = SensorValue[ARM_pot];
+	if (pos > curr) {
+		ARM_up();
+	} else {
+		ARM_down();
+	}
+	while (SensorValue[ARM_pot] != pos) {}
+	ARM_stop();
+}
+
+/////////////////////////////// LCD SETUP ///////////////////////////////
+void displayLCDFloat(int line, int pos, float val) {
+	clearLCDLine(line);
+	string valstr = val;
+	displayLCDString(line, pos, valstr);
+}
+void LCD_reset() {
+	bLCDBacklight = true;
+	clearLCDLine(0);
+	clearLCDLine(1);
 }
 
 /////////////////////////////// LCD VIEWS ///////////////////////////////
@@ -341,7 +365,7 @@ void DO_arm() {
 	else if (STATE_ARM_down()) {
 		ARM_down();
 	} else {
-		ARM_stop();
+		ARM_coast();
 	}
 }
 

@@ -5,24 +5,8 @@
 
 float X = 0;
 
-void turn_to(float pos, float speed, tMotor m, tSensors p) {
-	if (pos < 0) {pos = 0;}
-	if (pos > 4095) {pos = 4095;}
-	int curr = SensorValue[p];
-	int dir;
-	if (pos > curr) {
-		dir = 1;
-	} else {
-		dir = -1;
-	}
-	motor(m) = dir * speed;
-	while (SensorValue[p] != pos) {X = SensorValue[p];}
-}
 
 task main()
 {
-	while (1) {
-		if (vexRT[Btn6U]) {turn_to(SensorValue[pot]+10, 30, mot, pot);}
-		if (vexRT[Btn6D]) {turn_to(SensorValue[pot]-10, 30, mot, pot);}
-	}
+	turn_to(0, 40, mot, pot);
 }
