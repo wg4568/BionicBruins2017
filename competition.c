@@ -100,7 +100,6 @@ bool STATE_adjust_threshdown() {
 bool STATE_adjust_threshup() {
 	return (STATE_LCD_sensitivity() && vexRT[Btn7U]);
 }
-
 bool STATE_precise_control() {
 //	if (vexRT[Btn8D]) {
 //		if (CONTROL_precise_toggle == 1) {
@@ -114,7 +113,8 @@ bool STATE_precise_control() {
 	return (false);
 }
 bool STATE_toggle_drive_mode() {
-	return (vexRT[Btn7U] == 1);
+//	return (vexRT[Btn7U] == 1);
+	return (false);
 }
 bool STATE_view_speed() {
 	return (onezeroneg(left) || onezeroneg(right));
@@ -174,10 +174,10 @@ void ARM_up() {
 	motor[right_arm_b] = ARM_up_speed;
 }
 void ARM_stop() {
-	motor[left_arm_a] = 25;
-	motor[right_arm_a] = 25;
-	motor[left_arm_b] = 25;
-	motor[right_arm_b] = 25;
+	motor[left_arm_a] = 10;
+	motor[right_arm_a] = 10;
+	motor[left_arm_b] = 10;
+	motor[right_arm_b] = 10;
 }
 void ARM_down() {
 	motor[left_arm_a] = -ARM_down_speed;
@@ -361,6 +361,8 @@ void DO_calcs() {
 		prev_left = left;
 		prev_right = right;
 	}
+	debug_one = 0;
+	debug_two = 0;
 }
 void DO_movement() {
 	if (STATE_precise_control()) {
@@ -368,14 +370,13 @@ void DO_movement() {
 	}
 	int r = CONTROL_direction * right;
 	int l = CONTROL_direction * left;
-	if ((l < 0 && r > 0) || ( l > 0 && r < 0)) {
-		l = l * CONFIG_turn_ratio;
-		r = r * CONFIG_turn_ratio;
-	}
+//	if ((l < 0 && r > 0) || ( l > 0 && r < 0)) {
+//		l = l * CONFIG_turn_ratio;
+//		r = r * CONFIG_turn_ratio;
+//	}
 	MOVEMENT_left_drive(l);
 	MOVEMENT_right_drive(r);
 }
-
 void DO_arm() {
 	if (STATE_ARM_up()) {
 		ARM_up();
@@ -386,7 +387,6 @@ void DO_arm() {
 		ARM_stop();
 	}
 }
-
 void DO_intake() {
 	if (STATE_intake_open()) {
 		INTAKE_open();
@@ -396,12 +396,20 @@ void DO_intake() {
 		INTAKE_stop();
 	}
 }
-
 void DO_auton() {
 	if (AUTON_MODE == "RIGHT") {
 		ARM_stop();
-		MOVEMENT_drive(100, 100, 200);				//for
-		MOVEMENT_drive(-70, -70, 1200);			//Back
+		MOVEMENT_drive(100, 100, 400);				//for
+		MOVEMENT_drive(-70, -70, 2400);			//Back
+		motor[left_arm_a] = ARM_up_speed+40;
+		motor[right_arm_a] = ARM_up_speed+40;
+		motor[left_arm_b] = ARM_up_speed+40;
+		motor[right_arm_b] = ARM_up_speed+40;
+		wait1Msec(100);
+		motor[left_arm_a] = 0;
+		motor[right_arm_a] = 0;
+		motor[left_arm_b] = 0;
+		motor[right_arm_b] = 0;
 		INTAKE_open();
 		wait1Msec(1000);
 		INTAKE_stop();
@@ -409,8 +417,8 @@ void DO_auton() {
 		INTAKE_close();
 		wait1Msec(1500);
 		ARM_move(1, 700);
-		MOVEMENT_drive(-100, -20, 1800);			//Back
-		MOVEMENT_drive(-60, -60, 1600);
+		MOVEMENT_drive(-100, 0, 3000);			//Back
+		MOVEMENT_drive(-60, -60, 2800);
 		motor[left_arm_a] = ARM_up_speed+40;
 		motor[right_arm_a] = ARM_up_speed+40;
 		motor[left_arm_b] = ARM_up_speed+40;
@@ -434,15 +442,55 @@ void DO_auton() {
 		motor[left_arm_b] = 0;
 		motor[right_arm_b] = 0;
 	} else {
-		//im a lazy fuck shhh
+		ARM_stop();
+		MOVEMENT_drive(100, 100, 400);				//for
+		MOVEMENT_drive(-70, -70, 2400);			//Back
+		motor[left_arm_a] = ARM_up_speed+40;
+		motor[right_arm_a] = ARM_up_speed+40;
+		motor[left_arm_b] = ARM_up_speed+40;
+		motor[right_arm_b] = ARM_up_speed+40;
+		wait1Msec(100);
+		motor[left_arm_a] = 0;
+		motor[right_arm_a] = 0;
+		motor[left_arm_b] = 0;
+		motor[right_arm_b] = 0;
+		INTAKE_open();
+		wait1Msec(1000);
+		INTAKE_stop();
+		MOVEMENT_drive(60, 60, 2300);				//Forwards
+		INTAKE_close();
+		wait1Msec(1500);
+		ARM_move(1, 700);
+		MOVEMENT_drive(0, -100, 3000);			//Back
+		MOVEMENT_drive(-60, -60, 2800);
+		motor[left_arm_a] = ARM_up_speed+40;
+		motor[right_arm_a] = ARM_up_speed+40;
+		motor[left_arm_b] = ARM_up_speed+40;
+		motor[right_arm_b] = ARM_up_speed+40;
+		wait1Msec(2000);
+		INTAKE_open();
+		wait1Msec(1000);
+		INTAKE_stop();
+		motor[left_arm_a] = 0;
+		motor[right_arm_a] = 0;
+		motor[left_arm_b] = 0;
+		motor[right_arm_b] = 0;
+		wait1Msec(600);
+		motor[left_arm_a] = -ARM_up_speed-40;
+		motor[right_arm_a] = -ARM_up_speed-40;
+		motor[left_arm_b] = -ARM_up_speed-40;
+		motor[right_arm_b] = -ARM_up_speed-40;
+		wait1Msec(3000);
+		motor[left_arm_a] = 0;
+		motor[right_arm_a] = 0;
+		motor[left_arm_b] = 0;
+		motor[right_arm_b] = 0;
 	}
 }
 
+/////////////////////////////// MAIN TASKS //////////////////////////////
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks
-  // running between Autonomous and Driver controlled modes. You will need to
-  // manage all user created tasks if set to false.
   bStopTasksBetweenModes = true;
   bDisplayCompetitionStatusOnLcd = false;
   LCD_reset();
@@ -468,3 +516,7 @@ task usercontrol() {
 		frame++;
 	}
 }
+
+/*
+CARRY PLS
+*/
