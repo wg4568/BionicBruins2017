@@ -14,8 +14,8 @@
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
-/*										Bionic Bruins B Team (6374B) Code											 */
-/*										 	by William Gardner, 2016														 */
+/*                    Bionic Bruins B Team (6374B) Code                      */
+/*                      by William Gardner, 2016                             */
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
@@ -397,100 +397,32 @@ void DO_intake() {
 	}
 }
 void DO_auton() {
-	if (AUTON_MODE == "RIGHT") {
-		ARM_stop();
-		MOVEMENT_drive(100, 100, 400);				//for
-		MOVEMENT_drive(-70, -70, 2400);			//Back
-		motor[left_arm_a] = ARM_up_speed+40;
-		motor[right_arm_a] = ARM_up_speed+40;
-		motor[left_arm_b] = ARM_up_speed+40;
-		motor[right_arm_b] = ARM_up_speed+40;
-		wait1Msec(100);
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-		INTAKE_open();
-		wait1Msec(1000);
-		INTAKE_stop();
-		MOVEMENT_drive(60, 60, 2300);				//Forwards
-		INTAKE_close();
-		wait1Msec(1500);
-		ARM_move(1, 700);
-		MOVEMENT_drive(-100, 0, 3000);			//Back
-		MOVEMENT_drive(-60, -60, 2800);
-		motor[left_arm_a] = ARM_up_speed+40;
-		motor[right_arm_a] = ARM_up_speed+40;
-		motor[left_arm_b] = ARM_up_speed+40;
-		motor[right_arm_b] = ARM_up_speed+40;
-		wait1Msec(2000);
-		INTAKE_open();
-		wait1Msec(1000);
-		INTAKE_stop();
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-		wait1Msec(600);
-		motor[left_arm_a] = -ARM_up_speed-40;
-		motor[right_arm_a] = -ARM_up_speed-40;
-		motor[left_arm_b] = -ARM_up_speed-40;
-		motor[right_arm_b] = -ARM_up_speed-40;
-		wait1Msec(3000);
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-	} else {
-		ARM_stop();
-		MOVEMENT_drive(100, 100, 400);				//for
-		MOVEMENT_drive(-70, -70, 2400);			//Back
-		motor[left_arm_a] = ARM_up_speed+40;
-		motor[right_arm_a] = ARM_up_speed+40;
-		motor[left_arm_b] = ARM_up_speed+40;
-		motor[right_arm_b] = ARM_up_speed+40;
-		wait1Msec(100);
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-		INTAKE_open();
-		wait1Msec(1000);
-		INTAKE_stop();
-		MOVEMENT_drive(60, 60, 2300);				//Forwards
-		INTAKE_close();
-		wait1Msec(1500);
-		ARM_move(1, 700);
-		MOVEMENT_drive(0, -100, 3000);			//Back
-		MOVEMENT_drive(-60, -60, 2800);
-		motor[left_arm_a] = ARM_up_speed+40;
-		motor[right_arm_a] = ARM_up_speed+40;
-		motor[left_arm_b] = ARM_up_speed+40;
-		motor[right_arm_b] = ARM_up_speed+40;
-		wait1Msec(2000);
-		INTAKE_open();
-		wait1Msec(1000);
-		INTAKE_stop();
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-		wait1Msec(600);
-		motor[left_arm_a] = -ARM_up_speed-40;
-		motor[right_arm_a] = -ARM_up_speed-40;
-		motor[left_arm_b] = -ARM_up_speed-40;
-		motor[right_arm_b] = -ARM_up_speed-40;
-		wait1Msec(3000);
-		motor[left_arm_a] = 0;
-		motor[right_arm_a] = 0;
-		motor[left_arm_b] = 0;
-		motor[right_arm_b] = 0;
-	}
+//	drvie bnack k
+//	lowkeu arm raize
+//	unshenanagen the schmoogles
+//	drive forwards and reshenanegan the schmoogles
+//	drive 2 fence
+//	and raise arm wile unxhenanignanung the schiooogmleas
+	MOVEMENT_drive(100, 100, 350);
+
+	MOVEMENT_drive(-100, -100, 1100);
+
+	ARM_move(1, 500);
+
+	INTAKE_open();
+	wait1Msec(2300);
+	INTAKE_stop();
+
+	MOVEMENT_drive(90, 90, 1100);
+
+	INTAKE_close();
+	wait1Msec(1400);
+
+	ARM_move(1, 1900);
 }
 
 /////////////////////////////// MAIN TASKS //////////////////////////////
-void pre_auton()
-{
+void pre_auton() {
   bStopTasksBetweenModes = true;
   bDisplayCompetitionStatusOnLcd = false;
   LCD_reset();
