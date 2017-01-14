@@ -37,6 +37,7 @@ float CONFIG_slow_tick = 30;
 float CONFIG_drive_mode = 1;
 float CONFIG_accel_tick = 200;
 float CONFIG_turn_ratio = 0.75;
+bool CONFIG_auton_start = false;
 float ARM_up_speed = 127;
 float ARM_down_speed = 60;
 int LCD_left_button = 1;
@@ -49,7 +50,7 @@ float CONTROL_min_speed = 5;
 float CONTROL_precise = CONTROL_sensitivity / CONFIG_precise_ratio;
 int CONTROL_direction = 1;
 int CONTROL_precise_toggle = 0;
-string AUTON_MODE = "RIGHT";
+string AUTON_MODE = "OFF";
 
 float left = 0;
 float right = 0;
@@ -290,10 +291,10 @@ void DO_lcd() {
 }
 void DO_usercontrol() {
 	if (STATE_auton_toggle()) {
-		if (AUTON_MODE == "LEFT") {
-			AUTON_MODE = "RIGHT";
+		if (AUTON_MODE == "ON") {
+			AUTON_MODE = "OFF";
 		} else {
-			AUTON_MODE = "LEFT";
+			AUTON_MODE = "ON";
 		}
 		wait1Msec(200);
 	}
@@ -403,22 +404,30 @@ void DO_auton() {
 //	drive forwards and reshenanegan the schmoogles
 //	drive 2 fence
 //	and raise arm wile unxhenanignanung the schiooogmleas
-	MOVEMENT_drive(100, 100, 350);
+	if (AUTON_MODE == "ON") {
+		MOVEMENT_drive(100, 100, 450);
 
-	MOVEMENT_drive(-100, -100, 1100);
+		MOVEMENT_drive(-100, -100, 1200);
 
-	ARM_move(1, 500);
+		ARM_move(1, 200);
 
-	INTAKE_open();
-	wait1Msec(2300);
-	INTAKE_stop();
+		INTAKE_open();
+		wait1Msec(500);
 
-	MOVEMENT_drive(90, 90, 1100);
+		MOVEMENT_drive(90, 100, 1800);
+		INTAKE_stop();
 
-	INTAKE_close();
-	wait1Msec(1400);
+		INTAKE_close();
+		wait1Msec(500);
 
-	ARM_move(1, 1900);
+		ARM_move(1, 2100);
+
+		MOVEMENT_drive(-100, -30, 3000);
+		MOVEMENT_drive(-60, -60, 1000);
+		ARM_move(1, 1400);
+		INTAKE_open();
+		ARM_move(1, 2600);
+	}
 }
 
 /////////////////////////////// MAIN TASKS //////////////////////////////
@@ -435,6 +444,9 @@ task autonomous() {
 }
 
 task usercontrol() {
+	if (CONFIG_auton_start) {
+		DO_auton();
+	}
 	while (true) {
 		DO_lcd();
 		DO_usercontrol();
