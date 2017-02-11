@@ -1,0 +1,69 @@
+!* competition=True, tidy=True *!
+
+define motor arm_right_upper {
+	port 2,
+	reversed
+};
+define motor arm_right_lower {
+	port 3,
+	reversed
+};
+define motor arm_left_upper {
+	port 4
+};
+define motor arm_left_lower {
+	port 5
+};
+define motor base_front_left {
+	port 6
+};
+define motor base_back_left {
+	port 7
+};
+define motor base_right_all {
+	port 8
+};
+define motor latch_motor {
+	port 9,
+	reversed
+};
+
+group motor latch {
+	latch_motor
+};
+group motor base_left {
+	base_front_left,
+	base_back_left
+};
+group motor base_right {
+	base_right_all
+};
+group motor arm_unit {
+	arm_right_upper,
+	arm_right_lower,
+	arm_left_upper,
+	arm_left_lower
+};
+
+bind group arm_unit button {
+	input 6U 100,
+	input 6D -50,
+	rest 20
+};
+bind group latch button {
+	input 8D -25,
+	input 8R 25
+};
+bind group base_left channel {
+	input 3
+};
+bind group base_right channel {
+	input 2
+};
+
+auton {
+	run latch 25 500,
+	run base_left base_right 100 1000,
+	run arm_unit 100 500,
+	run base_left base_right -100 1000
+}
